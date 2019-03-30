@@ -8,7 +8,7 @@ import java.awt.geom.Rectangle2D;
 import java.util.ArrayList;
 
 public class BattleFieldUtils {
-    private static final int BOT_WIDTH = 36;
+    public static final int BOT_WIDTH = 36;
     public static final int BOT_HALF_WIDTH = 18;
     private static final double WALL_BORDER = BOT_HALF_WIDTH + 1.5;
     private static final double SMALLEST_FACTOR = 0.95;
@@ -18,20 +18,11 @@ public class BattleFieldUtils {
     private double battleFieldWidth;
     private double battleFieldHeight;
     private Rectangle2D.Double battleField;
-    private Point2D.Double[] corners;
-    private Point2D.Double center;
 
     public void setDimensions(double battleFieldWidth, double battleFieldHeight) {
         this.battleFieldWidth = battleFieldWidth;
         this.battleFieldHeight = battleFieldHeight;
         this.battleField = new Rectangle2D.Double(BOT_HALF_WIDTH, BOT_HALF_WIDTH, battleFieldWidth - BOT_WIDTH, battleFieldHeight - BOT_WIDTH);
-        this.corners = new Point2D.Double[4];
-        for (int i = 0; i < 4; i++) {
-            this.corners[i] = new Point2D.Double();
-            this.corners[i].setLocation(BOT_HALF_WIDTH + (i % 2) * (battleFieldWidth - BOT_WIDTH), i > 1 ? battleFieldHeight - BOT_HALF_WIDTH : BOT_HALF_WIDTH);
-        }
-        this.center = new Point2D.Double();
-        this.center.setLocation(battleFieldWidth / 2, battleFieldHeight / 2);
     }
 
     public Point2D.Double circle(Point2D.Double sourcePoint, int circleDirection, Point2D.Double enemyLocation, double desiredDistance, double enemyBulletPower) {
@@ -42,7 +33,7 @@ public class BattleFieldUtils {
         return wallSmoothing(sourcePoint, p, circleDirection, wallStick);
     }
 
-    public Point2D.Double wallSmoothing(Point2D.Double location, Point2D.Double destination, int circleDirection, double wallStick) {
+    private Point2D.Double wallSmoothing(Point2D.Double location, Point2D.Double destination, int circleDirection, double wallStick) {
         Point2D.Double p = new Point2D.Double(destination.x, destination.y);
         for (int i = 0; !battleField.contains(p) && i < 4; i++) {
             if (p.x < WALL_BORDER) {
@@ -142,14 +133,6 @@ public class BattleFieldUtils {
         return commands;
     }
 
-    public double getBattleFieldWidth() {
-        return battleFieldWidth;
-    }
-
-    public double getBattleFieldHeight() {
-        return battleFieldHeight;
-    }
-
     public boolean contains(Point2D.Double p, double battleBorder) {
         return p.x >= battleBorder && p.y >= battleBorder && p.x <= battleFieldWidth-battleBorder && p.y <= battleFieldHeight-battleBorder;
     }
@@ -172,40 +155,5 @@ public class BattleFieldUtils {
 
     public static Point2D.Double between(Point2D.Double a, Point2D.Double b, double f) {
         return new Point2D.Double(a.x + f * (b.x - a.x), a.y + f * (b.y - a.y));
-    }
-
-    public Point2D.Double adjustToBattlefield(Point2D.Double p, double border) {
-        return new Point2D.Double(BattleFieldUtils.limit(border, p.x, battleFieldWidth - border), BattleFieldUtils.limit(border, p.y, battleFieldHeight - border));
-    }
-
-    private Point2D.Double moveFromCorner(Point2D.Double p, Point2D.Double corner, double cornerRadius) {
-        if (p.distance(corner) < cornerRadius) {
-            double angle = Math.round(Math.PI / 4 + BattleFieldUtils.absoluteBearing(corner, center) / Math.PI * 4) * Math.PI / 4 - Math.PI / 4;
-            Point2D.Double c = BattleFieldUtils.project(corner, angle, cornerRadius * Math.sqrt(2));
-            if (c.distance(p) > cornerRadius) {
-                return BattleFieldUtils.project(c, BattleFieldUtils.absoluteBearing(c, p), cornerRadius);
-            } else {
-                return p;
-            }
-        } else {
-            return p;
-        }
-    }
-
-    public Point2D.Double getClosestCorner(Point2D.Double p) {
-        double closest = Double.POSITIVE_INFINITY;
-        Point2D.Double closestCorner = corners[0];
-        for (int i = 0; i < 4; i++) {
-            double distance = p.distance(corners[i]);
-            if (distance < closest) {
-                closest = distance;
-                closestCorner = corners[i];
-            }
-        }
-        return closestCorner;
-    }
-
-    public Point2D.Double moveFromCorner(Point2D.Double p, double cornerRadius) {
-        return moveFromCorner(p, getClosestCorner(p), cornerRadius);
     }
 }

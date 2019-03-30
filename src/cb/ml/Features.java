@@ -15,18 +15,20 @@ public class Features {
 
     @Override
     public String toString() {
-        String s = "";
+        StringBuilder s = new StringBuilder();
         for (String k : features.keySet()) {
-            s += String.format("%.2f", features.get(k)) + ",";
+            s.append(String.format("%.2f", features.get(k)));
+            s.append(",");
         }
-        return s;
+        return s.toString();
     }
 
     public String keysToString() {
-        String s = "";
+        StringBuilder s = new StringBuilder();
         for (String k : features.keySet()) {
-            s += k + ",";
+            s.append(k);
+            s.append(",");
         }
-        return s;
+        return s.toString();
     }
 }
