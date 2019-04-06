@@ -31,6 +31,7 @@ public class Domogled extends AdvancedRobot {
     private double myEnergy;
     private double myBulletPower;
     private MovementState opponentState;
+    private long opponentTimeSinceLastDeceleration = 0;
     private double opponentEnergy = 100;
     private double opponentBulletPower = 2;
     private Point2D.Double destination = new Point2D.Double();
@@ -155,7 +156,7 @@ public class Domogled extends AdvancedRobot {
                     currentGuessFactor = bulletWave.getGuessFactor(opponentState.location);
                 }
             }
-            BulletWave newBulletWave = new BulletWave(myState, opponentState, myBulletPower, currentGuessFactor, battleField);
+            BulletWave newBulletWave = new BulletWave(myState, opponentState, opponentTimeSinceLastDeceleration, myBulletPower, currentGuessFactor, battleField);
             target = newBulletWave.getPoint(targeting.aim(newBulletWave.getFeatures()));
             double targetAngle = BattleFieldUtils.absoluteBearing(myNextState.location, target); //TODO myNextState or myState?
             double angleTolerance = Math.atan(14 / myState.location.distance(target));
@@ -256,6 +257,11 @@ public class Domogled extends AdvancedRobot {
             waves.add(wave);
         }
         opponentEnergy = e.getEnergy();
+        if (opponentState != null && Math.abs(e.getVelocity()) < Math.abs(opponentState.velocity)) {
+            opponentTimeSinceLastDeceleration = 0;
+        } else {
+            opponentTimeSinceLastDeceleration++;
+        }
         opponentState = new MovementState(time, location, e.getHeadingRadians(), e.getVelocity());
     }
 

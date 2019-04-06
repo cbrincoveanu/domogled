@@ -17,12 +17,13 @@ public class BulletWave {
     private double opponentLateralVelocity;
     private double opponentAdvancingVelocity;
     private double opponentCurrentGuessFactor;
+    private long opponentTimeSinceLastDeceleration;
     private Point2D.Double target;
     private Point2D.Double minEscapePoint;
     private Point2D.Double maxEscapePoint;
     private int direction;
 
-    public BulletWave(MovementState myState, MovementState opponentState, double bulletPower, double cgf, BattleFieldUtils battleField) {
+    public BulletWave(MovementState myState, MovementState opponentState, long otsld, double bulletPower, double cgf, BattleFieldUtils battleField) {
         time = myState.time;
         source = myState.location;
         target = opponentState.location;
@@ -39,6 +40,7 @@ public class BulletWave {
         maxEscapePoint = battleField.maximumEscapeAngle(direction, robotState, myState.location, bulletPower);
         //minEscapeAngle = BattleFieldUtils.absoluteBearing(myState.location, minEscapePoint);
         //maxEscapeAngle = BattleFieldUtils.absoluteBearing(myState.location, maxEscapePoint);
+        opponentTimeSinceLastDeceleration = otsld;
         opponentCurrentGuessFactor = cgf;
     }
 
@@ -67,6 +69,7 @@ public class BulletWave {
         features.setFeature("opponentLateralVelocity", opponentLateralVelocity);
         features.setFeature("opponentAdvancingVelocity", opponentAdvancingVelocity);
         features.setFeature("opponentCurrentGuessFactor", opponentCurrentGuessFactor);
+        features.setFeature("opponentTimeSinceLastDeceleration", opponentTimeSinceLastDeceleration);
         features.setFeature("distance", distance);
         features.setFeature("myBulletPower", myBulletPower);
         return features;
