@@ -17,7 +17,7 @@ public class Domogled extends AdvancedRobot {
     private static double myBulletPowerFired = 0;
     private static double myBulletPowerHit = 0;
     private static String opponentName = null;
-    private static Targeting targeting = new BaselineTargeting();
+    private static Targeting targeting = new DomogledTargeting();
     private static Movement movement = new BaselineMovement();
     private static ArrayList<Observation> targetingObservations = new ArrayList<>();
     private static ArrayList<Observation> movementObservations = new ArrayList<>();
