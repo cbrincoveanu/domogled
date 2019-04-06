@@ -7,7 +7,8 @@ import java.util.List;
 public class DomogledTargeting implements Targeting {
     //TODO add implementation without bins
     private static final int BINS = 31;
-    private KdTree<Double> tree = new KdTree.Manhattan<>(5, 500);
+    private static final int DIMENSIONS = 7;
+    private KdTree<Double> tree = new KdTree.Manhattan<>(DIMENSIONS, 500);
 
     @Override
     public void addPoint(Features features, double guessFactor, ObservationType observationType) {
@@ -36,12 +37,14 @@ public class DomogledTargeting implements Targeting {
     }
 
     private double[] getLocation(Features features) {
-        double[] location = new double[5];
+        double[] location = new double[DIMENSIONS];
         location[0] = features.getFeature("opponentAdvancingVelocity") / 16.0;
         location[1] = features.getFeature("myBulletPower") / 3.0;
         location[2] = 1.0 / (1.0 + features.getFeature("distance") / 160.0);
         location[3] = features.getFeature("opponentLateralVelocity") / 8.0;
         location[4] = 1.0 / (1.0 + features.getFeature("opponentTimeSinceLastDeceleration") / 10.0);
+        location[5] = features.getFeature("opponentForwardWall");
+        location[6] = features.getFeature("opponentBackwardWall");
         return location;
     }
 }

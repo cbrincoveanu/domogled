@@ -18,6 +18,8 @@ public class BulletWave {
     private double opponentAdvancingVelocity;
     private double opponentCurrentGuessFactor;
     private long opponentTimeSinceLastDeceleration;
+    private double opponentForwardWall;
+    private double opponentBackwardWall;
     private Point2D.Double target;
     private Point2D.Double minEscapePoint;
     private Point2D.Double maxEscapePoint;
@@ -38,8 +40,11 @@ public class BulletWave {
         MovementState robotState = new MovementState(time, opponentState.location, opponentState.heading, opponentState.velocity);
         minEscapePoint = battleField.maximumEscapeAngle(-direction, robotState, myState.location, bulletPower);
         maxEscapePoint = battleField.maximumEscapeAngle(direction, robotState, myState.location, bulletPower);
-        //minEscapeAngle = BattleFieldUtils.absoluteBearing(myState.location, minEscapePoint);
-        //maxEscapeAngle = BattleFieldUtils.absoluteBearing(myState.location, maxEscapePoint);
+        double minEscapeAngle = BattleFieldUtils.absoluteBearing(myState.location, minEscapePoint);
+        double maxEscapeAngle = BattleFieldUtils.absoluteBearing(myState.location, maxEscapePoint);
+        double mea = BattleFieldUtils.maximumEscapeAngle(bulletPower);
+        opponentForwardWall = Math.abs(Utils.normalRelativeAngle(absoluteBearing-maxEscapeAngle)) / mea;
+        opponentBackwardWall = Math.abs(Utils.normalRelativeAngle(absoluteBearing-minEscapeAngle)) / mea;
         opponentTimeSinceLastDeceleration = otsld;
         opponentCurrentGuessFactor = cgf;
     }
@@ -70,6 +75,8 @@ public class BulletWave {
         features.setFeature("opponentAdvancingVelocity", opponentAdvancingVelocity);
         features.setFeature("opponentCurrentGuessFactor", opponentCurrentGuessFactor);
         features.setFeature("opponentTimeSinceLastDeceleration", opponentTimeSinceLastDeceleration);
+        features.setFeature("opponentForwardWall", opponentForwardWall);
+        features.setFeature("opponentBackwardWall", opponentBackwardWall);
         features.setFeature("distance", distance);
         features.setFeature("myBulletPower", myBulletPower);
         return features;

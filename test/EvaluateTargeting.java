@@ -16,10 +16,13 @@ public class EvaluateTargeting {
             List<Targeting> targetings = new ArrayList<>();
             targetings.add(new DummyTargeting());
             targetings.add(new BaselineTargeting());
+            targetings.add(new DomogledTargeting());
             for (Targeting targeting : targetings) {
                 System.out.println(targeting);
                 File folder = new File(targetingFolder);
                 File[] listOfFiles = folder.listFiles();
+                double totalScore = 0;
+                int totalCount = 0;
                 for (File file : listOfFiles) {
                     if (file.isFile()) {
                         List<Item> data = getData(targetingFolder + file.getName());
@@ -33,8 +36,11 @@ public class EvaluateTargeting {
                             targeting.addPoint(item.features, item.guessFactor, item.observationType);
                         }
                         System.out.println("\t" + file.getName() + "\t" + score / count);
+                        totalScore += score / count;
+                        totalCount++;
                     }
                 }
+                System.out.println("\t--- Total score:\t" + totalScore / totalCount);
             }
         } catch (IOException e) {
             e.printStackTrace();
