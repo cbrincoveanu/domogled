@@ -17,6 +17,7 @@ public class EvaluateTargeting {
             targetings.add(new DummyTargeting());
             targetings.add(new BaselineTargeting());
             targetings.add(new DomogledTargeting());
+            targetings.add(new BetaTargeting());
             for (Targeting targeting : targetings) {
                 System.out.println(targeting);
                 File folder = new File(targetingFolder);

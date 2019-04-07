@@ -17,7 +17,12 @@ public class Features {
     public String toString() {
         StringBuilder s = new StringBuilder();
         for (String k : features.keySet()) {
-            s.append(String.format("%.2f", features.get(k)));
+            double value = features.get(k);
+            if (Math.abs(value) > 100 || Math.abs(Math.round(value)- value) < 0.01) {
+                s.append(Math.round(value));
+            } else {
+                s.append(String.format("%.2f", value));
+            }
             s.append(",");
         }
         return s.toString();

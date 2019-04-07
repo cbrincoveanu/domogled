@@ -11,7 +11,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 
 public class Domogled extends AdvancedRobot {
-    private static final boolean WRITE_DATA = false;
+    private static final boolean WRITE_DATA_MOVEMENT = false;
+    private static final boolean WRITE_DATA_TARGETING = false;
     private static boolean initialized = false;
     private static BattleFieldUtils battleField;
     private static double myBulletPowerFired = 0;
@@ -30,7 +31,7 @@ public class Domogled extends AdvancedRobot {
     private MovementState myOld3State;
     private double myEnergy;
     private double myBulletPower;
-    private MovementState opponentState;
+    private ArrayList<MovementState> opponentStates = new ArrayList<>();
     private long opponentTimeSinceLastDeceleration = 0;
     private double opponentEnergy = 100;
     private double opponentBulletPower = 2;
@@ -60,12 +61,12 @@ public class Domogled extends AdvancedRobot {
     }
 
     private void radar() {
-        if (opponentState == null) {
+        if (opponentStates.isEmpty()) {
             setTurnRadarRightRadians(Double.POSITIVE_INFINITY);
         } else {
-            double angle = BattleFieldUtils.absoluteBearing(myState.location, opponentState.location);
-            double maxDistance = (myState.time - opponentState.time) * 8;
-            double extraTurn = Math.atan(maxDistance / myState.location.distance(opponentState.location));
+            double angle = BattleFieldUtils.absoluteBearing(myState.location, opponentStates.get(0).location);
+            double maxDistance = (myState.time - opponentStates.get(0).time) * 8;
+            double extraTurn = Math.atan(maxDistance / myState.location.distance(opponentStates.get(0).location));
             if (Utils.normalRelativeAngle(angle - getRadarHeadingRadians()) < 0) {
                 setTurnRadarRightRadians(Utils.normalRelativeAngle(angle - extraTurn - getRadarHeadingRadians()));
             } else {
@@ -82,11 +83,11 @@ public class Domogled extends AdvancedRobot {
             else
                 return -1;
         });
-        if (waves.size() > 0 && opponentState != null) {
+        if (waves.size() > 0 && !opponentStates.isEmpty()) {
             Wave firstWave = waves.get(0);
             double lowestDanger = Double.POSITIVE_INFINITY;
             for (int direction = -1; direction <= 1; direction += 2) {
-                MovementState state = battleField.predictPosition(direction, myState, opponentState.location, firstWave.getSource(), firstWave.getTime(), firstWave.getEnemyBulletPower(), getDesiredDistance(), 8);
+                MovementState state = battleField.predictPosition(direction, myState, opponentStates.get(0).location, firstWave.getSource(), firstWave.getTime(), firstWave.getEnemyBulletPower(), getDesiredDistance(), 8);
                 possibleDestinations.add(state.location);
                 double danger = firstWave.getEnemyBulletPower() * firstWave.getDanger(state.location, movement);
                 if (waves.size() > 1) {
@@ -96,7 +97,7 @@ public class Domogled extends AdvancedRobot {
                         minSecondDanger += 0.5 * waves.get(2).getEnemyBulletPower() * waves.get(2).getDanger(state.location, movement);
                     }
                     for (int d2 = -1; d2 <= 1; d2 += 2) {
-                        MovementState secondState = battleField.predictPosition(d2, state, opponentState.location, secondWave.getSource(), secondWave.getTime(), secondWave.getEnemyBulletPower(), getDesiredDistance(), 8);
+                        MovementState secondState = battleField.predictPosition(d2, state, opponentStates.get(0).location, secondWave.getSource(), secondWave.getTime(), secondWave.getEnemyBulletPower(), getDesiredDistance(), 8);
                         double d = secondWave.getEnemyBulletPower() * secondWave.getDanger(secondState.location, movement);
                         if (waves.size() > 2) {
                             d += 0.5 * waves.get(2).getEnemyBulletPower() * waves.get(2).getDanger(state.location, movement);
@@ -110,18 +111,18 @@ public class Domogled extends AdvancedRobot {
                     circleDirection = direction;
                 }
             }
-            if (myState.location.distance(opponentState.location) < 150) {
-                Point2D.Double destination = battleField.circle(myState.location, circleDirection, opponentState.location, getDesiredDistance(), opponentBulletPower);
-                Point2D.Double destination2 = battleField.circle(myState.location, -circleDirection, opponentState.location, getDesiredDistance(), opponentBulletPower);
-                if (opponentState.location.distance(destination) < myState.location.distance(destination) && opponentState.location.distance(destination2) > myState.location.distance(destination2)) {
+            if (myState.location.distance(opponentStates.get(0).location) < 150) {
+                Point2D.Double destination = battleField.circle(myState.location, circleDirection, opponentStates.get(0).location, getDesiredDistance(), opponentBulletPower);
+                Point2D.Double destination2 = battleField.circle(myState.location, -circleDirection, opponentStates.get(0).location, getDesiredDistance(), opponentBulletPower);
+                if (opponentStates.get(0).location.distance(destination) < myState.location.distance(destination) && opponentStates.get(0).location.distance(destination2) > myState.location.distance(destination2)) {
                     circleDirection = -circleDirection;
                 }
             }
-            destination = battleField.circle(myState.location, circleDirection, opponentState.location, getDesiredDistance(), opponentBulletPower);
-        } else if (opponentState != null) {
-            destination = battleField.circle(myState.location, circleDirection, opponentState.location, getDesiredDistance(), opponentBulletPower);
-            Point2D.Double b = battleField.circle(myState.location, -circleDirection, opponentState.location, getDesiredDistance(), opponentBulletPower);
-            if (opponentState.location.distance(destination) < myState.location.distance(destination) && opponentState.location.distance(b) > myState.location.distance(b)) {
+            destination = battleField.circle(myState.location, circleDirection, opponentStates.get(0).location, getDesiredDistance(), opponentBulletPower);
+        } else if (!opponentStates.isEmpty()) {
+            destination = battleField.circle(myState.location, circleDirection, opponentStates.get(0).location, getDesiredDistance(), opponentBulletPower);
+            Point2D.Double b = battleField.circle(myState.location, -circleDirection, opponentStates.get(0).location, getDesiredDistance(), opponentBulletPower);
+            if (opponentStates.get(0).location.distance(destination) < myState.location.distance(destination) && opponentStates.get(0).location.distance(b) > myState.location.distance(b)) {
                 circleDirection = -circleDirection;
                 destination = b;
             }
@@ -136,27 +137,28 @@ public class Domogled extends AdvancedRobot {
     }
 
     private double getDesiredDistance() {
-        return BattleFieldUtils.limit(350, myState.location.distance(opponentState.location) + 80, 1000);
+        return BattleFieldUtils.limit(350, myState.location.distance(opponentStates.get(0).location) + 80, 1000);
     }
 
     private void gun() {
-        if (opponentState != null) {
+        if (!opponentStates.isEmpty()) {
             calculateBulletPower();
             double currentGuessFactor = 0;
             double smallestDiff = Double.POSITIVE_INFINITY;
             for (int i = 0; i < bulletWaves.size(); i++) {
                 BulletWave bulletWave = bulletWaves.get(i);
-                double diff = bulletWave.getDiffUntilHit(opponentState.location, time);
+                double diff = bulletWave.getDiffUntilHit(opponentStates.get(0).location, time);
                 if (diff < 0) {
-                    addTargetingData(bulletWave.getFeatures(), bulletWave.getGuessFactor(opponentState.location), ObservationType.MISS);
+                    addTargetingData(bulletWave.getFeatures(), bulletWave.getGuessFactor(opponentStates.get(0).location), ObservationType.MISS);
                     bulletWaves.remove(i);
                     i--;
                 } else if (diff < smallestDiff) {
                     smallestDiff = diff;
-                    currentGuessFactor = bulletWave.getGuessFactor(opponentState.location);
+                    currentGuessFactor = bulletWave.getGuessFactor(opponentStates.get(0).location);
                 }
             }
-            BulletWave newBulletWave = new BulletWave(myState, opponentState, opponentTimeSinceLastDeceleration, myBulletPower, currentGuessFactor, battleField);
+            double distLast10 = opponentStates.get(0).location.distance(opponentStates.get(opponentStates.size()-1).location);
+            BulletWave newBulletWave = new BulletWave(myState, opponentStates.get(0), opponentTimeSinceLastDeceleration, myBulletPower, currentGuessFactor, distLast10, battleField);
             target = newBulletWave.getPoint(targeting.aim(newBulletWave.getFeatures()));
             double targetAngle = BattleFieldUtils.absoluteBearing(myNextState.location, target); //TODO myNextState or myState?
             double angleTolerance = Math.atan(14 / myState.location.distance(target));
@@ -174,7 +176,7 @@ public class Domogled extends AdvancedRobot {
     }
 
     private void calculateBulletPower() {
-        double distance = myState.location.distance(opponentState.location);
+        double distance = myState.location.distance(opponentStates.get(0).location);
         if (distance < 140) {
             myBulletPower = myEnergy;
         } else {
@@ -253,16 +255,19 @@ public class Domogled extends AdvancedRobot {
         double energyLoss = opponentEnergy - e.getEnergy();
         if (energyLoss > 0.099 && energyLoss < 3.01) {
             opponentBulletPower = energyLoss;
-            Wave wave = new Wave(opponentState, energyLoss, myOld2State, myOld3State);
+            Wave wave = new Wave(opponentStates.get(0), energyLoss, myOld2State, myOld3State);
             waves.add(wave);
         }
         opponentEnergy = e.getEnergy();
-        if (opponentState != null && Math.abs(e.getVelocity()) < Math.abs(opponentState.velocity)) {
+        if (!opponentStates.isEmpty() && Math.abs(e.getVelocity()) < Math.abs(opponentStates.get(0).velocity)) {
             opponentTimeSinceLastDeceleration = 0;
         } else {
             opponentTimeSinceLastDeceleration++;
         }
-        opponentState = new MovementState(time, location, e.getHeadingRadians(), e.getVelocity());
+        opponentStates.add(0, new MovementState(time, location, e.getHeadingRadians(), e.getVelocity()));
+        if (opponentStates.size() > 10) {
+            opponentStates.remove(10);
+        }
     }
 
     @Override
@@ -318,7 +323,7 @@ public class Domogled extends AdvancedRobot {
 
     @Override
     public void onRobotDeath(RobotDeathEvent e) {
-        opponentState = null;
+        opponentStates.clear();
     }
 
     @Override
@@ -328,15 +333,17 @@ public class Domogled extends AdvancedRobot {
 
     @Override
     public void onBattleEnded(BattleEndedEvent e) {
-        if (opponentName == null || !WRITE_DATA) {
-            System.out.println("Not writing any data.");
-        } else {
-            try {
+        try {
+            if (WRITE_DATA_MOVEMENT) {
                 DataStorage.writeCSV(getDataFile("movement_" + opponentName + ".csv"), movementObservations);
-                DataStorage.writeCSV(getDataFile("targeting_" + opponentName + ".csv"), targetingObservations);
-            } catch (IOException e1) {
-                System.out.println("Could not write csv file.");
+                System.out.println("Wrote movement_" + opponentName + ".csv");
             }
+            if (WRITE_DATA_TARGETING) {
+                DataStorage.writeCSV(getDataFile("targeting_" + opponentName + ".csv"), targetingObservations);
+                System.out.println("Wrote targeting_" + opponentName + ".csv");
+            }
+        } catch (IOException e1) {
+            System.out.println("Could not write csv file.");
         }
     }
 
@@ -346,8 +353,8 @@ public class Domogled extends AdvancedRobot {
         if (myState != null)
             g.drawRect((int) myState.location.x - BattleFieldUtils.BOT_HALF_WIDTH, (int) myState.location.y - BattleFieldUtils.BOT_HALF_WIDTH, BattleFieldUtils.BOT_WIDTH, BattleFieldUtils.BOT_WIDTH);
         g.setColor(Color.RED);
-        if (opponentState != null)
-            g.drawRect((int) opponentState.location.x - BattleFieldUtils.BOT_HALF_WIDTH, (int) opponentState.location.y - BattleFieldUtils.BOT_HALF_WIDTH, BattleFieldUtils.BOT_WIDTH, BattleFieldUtils.BOT_WIDTH);
+        if (!opponentStates.isEmpty())
+            g.drawRect((int) opponentStates.get(0).location.x - BattleFieldUtils.BOT_HALF_WIDTH, (int) opponentStates.get(0).location.y - BattleFieldUtils.BOT_HALF_WIDTH, BattleFieldUtils.BOT_WIDTH, BattleFieldUtils.BOT_WIDTH);
         g.setColor(Color.ORANGE);
         for (Point2D.Double point : possibleDestinations) {
             g.fillOval((int) point.getX() - 3, (int) point.getY() - 3, 6, 6);

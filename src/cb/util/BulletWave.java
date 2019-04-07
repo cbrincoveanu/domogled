@@ -20,12 +20,13 @@ public class BulletWave {
     private long opponentTimeSinceLastDeceleration;
     private double opponentForwardWall;
     private double opponentBackwardWall;
+    private double opponentDistanceLast10;
     private Point2D.Double target;
     private Point2D.Double minEscapePoint;
     private Point2D.Double maxEscapePoint;
     private int direction;
 
-    public BulletWave(MovementState myState, MovementState opponentState, long otsld, double bulletPower, double cgf, BattleFieldUtils battleField) {
+    public BulletWave(MovementState myState, MovementState opponentState, long otsld, double bulletPower, double cgf, double distLast10, BattleFieldUtils battleField) {
         time = myState.time;
         source = myState.location;
         target = opponentState.location;
@@ -47,6 +48,7 @@ public class BulletWave {
         opponentBackwardWall = Math.abs(Utils.normalRelativeAngle(absoluteBearing-minEscapeAngle)) / mea;
         opponentTimeSinceLastDeceleration = otsld;
         opponentCurrentGuessFactor = cgf;
+        opponentDistanceLast10 = distLast10;
     }
 
     public Point2D.Double getPoint(double guessFactor) {
@@ -77,6 +79,7 @@ public class BulletWave {
         features.setFeature("opponentTimeSinceLastDeceleration", opponentTimeSinceLastDeceleration);
         features.setFeature("opponentForwardWall", opponentForwardWall);
         features.setFeature("opponentBackwardWall", opponentBackwardWall);
+        features.setFeature("opponentDistanceLast10", opponentDistanceLast10);
         features.setFeature("distance", distance);
         features.setFeature("myBulletPower", myBulletPower);
         return features;
